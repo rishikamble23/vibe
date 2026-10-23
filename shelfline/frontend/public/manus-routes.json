@@ -1,0 +1,8 @@
+{
+  "routes": [
+    { "path": "/", "title": "SHELFLINE — Control Room" },
+    { "path": "/donor", "title": "SHELFLINE — Donor Portal" },
+    { "path": "/rider", "title": "SHELFLINE — Rider PWA" },
+    { "path": "/shelter", "title": "SHELFLINE — Shelter Tablet" }
+  ]
+}

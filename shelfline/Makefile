@@ -19,7 +19,7 @@ help: ## Show this help message
 
 up: ## Start all services with docker-compose
 	@echo "$(GREEN)Starting SHELFLINE services...$(NC)"
-	docker-compose -f shelfline/docker-compose.yml up -d
+	docker-compose -f docker-compose.yml up -d
 	@echo "$(GREEN)Services started!$(NC)"
 	@echo "  Backend:  http://localhost:8000"
 	@echo "  Frontend: http://localhost:5173"
@@ -27,28 +27,28 @@ up: ## Start all services with docker-compose
 
 down: ## Stop all services
 	@echo "$(YELLOW)Stopping SHELFLINE services...$(NC)"
-	docker-compose -f shelfline/docker-compose.yml down
+	docker-compose -f docker-compose.yml down
 
 down-v: ## Stop all services and remove volumes
 	@echo "$(RED)Stopping SHELFLINE services and removing volumes...$(NC)"
-	docker-compose -f shelfline/docker-compose.yml down -v
+	docker-compose -f docker-compose.yml down -v
 
 build: ## Build all Docker images
 	@echo "$(GREEN)Building Docker images...$(NC)"
-	docker-compose -f shelfline/docker-compose.yml build
+	docker-compose -f docker-compose.yml build
 
 logs: ## Show logs from all services
-	docker-compose -f shelfline/docker-compose.yml logs -f
+	docker-compose -f docker-compose.yml logs -f
 
 logs-backend: ## Show backend logs
-	docker-compose -f shelfline/docker-compose.yml logs -f backend
+	docker-compose -f docker-compose.yml logs -f backend
 
 logs-frontend: ## Show frontend logs
-	docker-compose -f shelfline/docker-compose.yml logs -f frontend
+	docker-compose -f docker-compose.yml logs -f frontend
 
 # Backend commands
 backend-shell: ## Open shell in backend container
-	docker-compose -f shelfline/docker-compose.yml exec backend bash
+	docker-compose -f docker-compose.yml exec backend bash
 
 backend-test: ## Run backend tests
 	cd shelfline/backend && pytest -v --tb=short
@@ -76,38 +76,38 @@ backend-migrate-check: ## Check for pending migrations
 
 # Frontend commands
 frontend-shell: ## Open shell in frontend container
-	docker-compose -f shelfline/docker-compose.yml exec frontend sh
+	docker-compose -f docker-compose.yml exec frontend sh
 
 frontend-test: ## Run frontend tests
-	cd shelfline/frontend && npm test
+	cd frontend && npm test
 
 frontend-lint: ## Run frontend linting
-	cd shelfline/frontend && npm run lint
+	cd frontend && npm run lint
 
 frontend-typecheck: ## Run TypeScript type checking
-	cd shelfline/frontend && npx tsc --noEmit
+	cd frontend && npx tsc --noEmit
 
 frontend-build: ## Build frontend for production
-	cd shelfline/frontend && npm run build
+	cd frontend && npm run build
 
 # Database commands
 db-shell: ## Open psql shell
-	docker-compose -f shelfline/docker-compose.yml exec postgres psql -U shelfline -d shelfline
+	docker-compose -f docker-compose.yml exec postgres psql -U shelfline -d shelfline
 
 db-reset: ## Reset database (drop all tables and recreate)
-	docker-compose -f shelfline/docker-compose.yml exec postgres psql -U shelfline -d shelfline -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+	docker-compose -f docker-compose.yml exec postgres psql -U shelfline -d shelfline -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 	$(MAKE) backend-migrate
 
 # Seed data
 seed: ## Seed database with demo data
 	@echo "$(GREEN)Seeding database...$(NC)"
-	cd shelfline/backend && python -m app.sim.seed
+	cd backend && python -m app.sim.seed
 	@echo "$(GREEN)Database seeded!$(NC)"
 
 # Demo
 demo: ## Run demo scenario (usage: make demo SCENARIO=S01)
 	@echo "$(GREEN)Running demo scenario: $(SCENARIO)$(NC)"
-	cd shelfline/backend && python -m app.sim.scenarios.run $(SCENARIO)
+	cd backend && python -m app.sim.scenarios.run $(SCENARIO)
 
 # Reset everything
 reset: down-v up seed ## Full reset: stop, remove volumes, start, seed
@@ -119,15 +119,15 @@ ci: backend-lint backend-test frontend-lint frontend-typecheck frontend-build ##
 
 # Development helpers
 dev-backend: ## Run backend locally (outside Docker)
-	cd shelfline/backend && uvicorn app.main:app --reload --port 8000
+	cd backend && uvicorn app.main:app --reload --port 8000
 
 dev-frontend: ## Run frontend locally (outside Docker)
-	cd shelfline/frontend && npm run dev
+	cd frontend && npm run dev
 
 install-backend: ## Install backend dependencies
-	cd shelfline/backend && pip install -r requirements.txt
+	cd backend && pip install -r requirements.txt
 
 install-frontend: ## Install frontend dependencies
-	cd shelfline/frontend && npm install
+	cd frontend && npm install
 
 install: install-backend install-frontend ## Install all dependencies
