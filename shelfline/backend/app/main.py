@@ -63,4 +63,6 @@ async def root():
 
 # Include API routes
 from app.api.routes import router as api_router
+from app.api.ws import ws_router
 app.include_router(api_router)
+app.include_router(ws_router, prefix="/ws", tags=["websocket"])
