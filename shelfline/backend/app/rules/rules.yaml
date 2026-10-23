@@ -1,0 +1,52 @@
+# SHELFLINE Rules Engine Configuration
+# Declarative item requirements, capability rules, and dietary constraints (Phase 6)
+
+rules_version: "1.0"
+
+items:
+  raw_ration_kit:
+    requires:
+      - clean_water
+      - cooking_fuel
+    rider_requires: []
+    max_ambient_minutes: 240
+    diet_must_match: []
+
+  infant_formula:
+    requires:
+      - clean_water
+      - heating_or_kettle
+    rider_requires: []
+    max_ambient_minutes: 180
+    diet_must_match: []
+
+  cooked_meal:
+    requires:
+      - serving_capacity
+    rider_requires: []
+    max_ambient_minutes: 120
+    diet_must_match:
+      - veg
+      - non_veg
+      - halal
+      - jain
+
+  cold_chain_medicine:
+    requires:
+      - refrigeration
+    rider_requires:
+      - insulated_box
+    max_ambient_minutes: 30
+    diet_must_match: []
+
+  cold_chain_food:
+    requires:
+      - refrigeration
+    rider_requires:
+      - insulated_box
+    max_ambient_minutes: 60
+    diet_must_match:
+      - veg
+      - non_veg
+
+capability_ttl_hours: 6
