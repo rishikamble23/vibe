@@ -1,0 +1,65 @@
+/* SHELFLINE - Clean Light Theme Styling */
+:root {
+  --bg-app: #F4F6F9;
+  --bg-card: #FFFFFF;
+  --bg-nav: #FFFFFF;
+  --bg-hover: #F0F3F7;
+  --bg-active: #EBF3FF;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+  --text-heading: #0F172A;
+  --border-color: #E2E8F0;
+  
+  --color-safe-bg: #DCFCE7;
+  --color-safe-text: #166534;
+  --color-warning-bg: #FEF3C7;
+  --color-warning-text: #92400E;
+  --color-danger-bg: #FEE2E2;
+  --color-danger-text: #991B1B;
+  --color-info-bg: #E0F2FE;
+  --color-info-text: #0369A1;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  padding: 1.25rem;
+}
+
+.badge-safe {
+  background-color: var(--color-safe-bg);
+  color: var(--color-safe-text);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.badge-warning {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.badge-danger {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}

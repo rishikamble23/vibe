@@ -27,5 +27,9 @@ async def get_db() -> AsyncSession:
 
 
 async def init_db() -> None:
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as exc:
+        import logging
+        logging.warning("Database connection failed during startup (Postgres offline?): %s. Running in degraded / memory mode.", exc)
