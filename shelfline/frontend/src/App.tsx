@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, AlertTriangle, Bell, CheckCircle2, Clock3, HeartPulse, Package, Search, ShieldCheck, Sparkles, Truck, X } from 'lucide-react';
-import type { AuditEvent, Batch, Rider, Shelter, ViewKey } from './data';
-import { formatSimClock, getBatchStatus, initialAudit, initialBatches, initialRiders, initialShelters } from './data';
+import type { Batch, Rider, Shelter, ViewKey } from './data';
+import { formatSimClock, getBatchStatus, initialBatches, initialRiders, initialShelters } from './data';
 import BatchTable from './components/BatchTable';
-import ChaosConsole from './components/ChaosConsole';
 import MetricCard from './components/MetricCard';
 import OperationalMap from './components/OperationalMap';
 import Sidebar from './components/Sidebar';
@@ -30,15 +29,13 @@ export default function App() {
   const [batches, setBatches] = useState<Batch[]>(initialBatches);
   const [riders, setRiders] = useState<Rider[]>(initialRiders);
   const [shelters, setShelters] = useState<Shelter[]>(initialShelters);
-  const [events, setEvents] = useState<AuditEvent[]>(initialAudit);
-  const [clockOffset, setClockOffset] = useState(0);
+  const [clockOffset] = useState(0);
   const [portionsSaved, setPortionsSaved] = useState(12840);
-  const [medianReassign, setMedianReassign] = useState(4.2);
+  const [medianReassign] = useState(4.2);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [toast, setToast] = useState('');
-  const idRef = useRef(4);
   const nextBatchRef = useRef(2049);
   const toastTimerRef = useRef<number | undefined>(undefined);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -73,11 +70,6 @@ export default function App() {
     toastTimerRef.current = window.setTimeout(() => setToast(''), 3200);
   }, []);
 
-  const addEvent = useCallback((message: string, level: AuditEvent['level'] = 'system', timeOffset = clockOffset) => {
-    const time = `${formatSimClock(timeOffset).replace(' UTC', '')}:${String(new Date().getSeconds()).padStart(2, '0')}`;
-    setEvents((current) => [{ id: idRef.current++, time, message, level }, ...current].slice(0, 36));
-  }, [clockOffset]);
-
   const violations = batches.filter((batch) => batch.slackSeconds <= 0).length;
   const riskPortions = batches.filter((batch) => getBatchStatus(batch, shelters) !== 'Safe').reduce((total, batch) => total + batch.portions, 0);
   const currentPage = pageCopy[view];
@@ -91,25 +83,21 @@ export default function App() {
     }
     if (actor?.type === 'rider' && (!riders.some((rider) => rider.id === actor.id && rider.active) || batch.riderId !== actor.id)) {
       showToast('This delivery is not assigned to the selected active rider.');
-      addEvent(`DELIVERY BLOCKED · ${batch.id} · rider assignment could not be verified`, 'warning');
       return;
     }
     if (actor?.type === 'shelter' && actor.id !== batch.destinationId) {
       showToast('This delivery is addressed to a different shelter.');
-      addEvent(`RECEIPT BLOCKED · ${batch.id} · shelter destination mismatch`, 'warning');
       return;
     }
     if (destination && destination.received + batch.portions > destination.capacity) {
       showToast(`${destination.name} has insufficient remaining intake capacity.`);
-      addEvent(`DELIVERY BLOCKED · ${batch.id} · shelter capacity exceeded`, 'warning');
       return;
     }
     setBatches((current) => current.filter((item) => item.id !== batch.id));
     setPortionsSaved((current) => current + batch.portions);
     setShelters((current) => current.map((shelter) => shelter.id === batch.destinationId ? { ...shelter, received: shelter.received + batch.portions } : shelter));
-    addEvent(`DELIVERY CONFIRMED · ${batch.id} received at ${batch.destination}`, 'success');
     showToast(`${batch.portions.toLocaleString()} portions confirmed delivered.`);
-  }, [addEvent, riders, shelters, showToast]);
+  }, [riders, shelters, showToast]);
 
   const createBatch = useCallback((batch: Omit<Batch, 'id'>) => {
     const destination = shelters.find((shelter) => shelter.id === batch.destinationId);
@@ -121,67 +109,21 @@ export default function App() {
     }
     const id = `SL-${nextBatchRef.current++}`;
     setBatches((current) => [{ ...batch, id }, ...current]);
-    addEvent(`DONATION REGISTERED · ${id} · ${batch.portions.toLocaleString()} portions from ${batch.donor}`, 'success');
     showToast(`${id} added to live dispatch.`);
-  }, [addEvent, batches, shelters, showToast]);
-
-  const ghostRider = useCallback(() => {
-    const target = riders.find((rider) => rider.active);
-    if (!target) {
-      showToast('All riders are already offline. Restore one from Rider PWA.');
-      addEvent('GHOST RIDER SKIPPED · no active rider available', 'warning');
-      return;
-    }
-    const replacement = riders.find((rider) => rider.active && rider.id !== target.id);
-    setRiders((current) => current.map((rider) => rider.id === target.id ? { ...rider, active: false, status: 'Offline' } : rider));
-    setBatches((current) => current.map((batch) => batch.riderId === target.id ? { ...batch, riderId: replacement?.id ?? null, slackSeconds: batch.slackSeconds - 120 } : batch));
-    setMedianReassign((current) => Number((current + 0.3).toFixed(1)));
-    addEvent(`GHOST RIDER · ${target.name} signal lost · assignments ${replacement ? `reassigned to ${replacement.name}` : 'flagged for dispatch'}`, 'warning');
-    showToast(`${target.name} marked offline; route recovery initiated.`);
-  }, [addEvent, riders, showToast]);
-
-  const closeShelter = useCallback(() => {
-    const target = shelters.find((shelter) => shelter.open);
-    if (!target) {
-      showToast('No receiving shelters are open. Reopen one from Shelter Tablet.');
-      addEvent('SHELTER CLOSURE SKIPPED · no open receiving nodes', 'warning');
-      return;
-    }
-    setShelters((current) => current.map((shelter) => shelter.id === target.id ? { ...shelter, open: false } : shelter));
-    setBatches((current) => current.map((batch) => batch.destinationId === target.id ? { ...batch, slackSeconds: batch.slackSeconds - 8 * 60 } : batch));
-    addEvent(`SHELTER CLOSED · ${target.name} unavailable · impacted batches escalated`, 'critical');
-    showToast(`${target.name} closed; affected batches escalated.`);
-  }, [addEvent, shelters, showToast]);
-
-  const trafficSpike = useCallback(() => {
-    setBatches((current) => current.map((batch) => ({ ...batch, slackSeconds: batch.slackSeconds - 7 * 60 })));
-    setRiders((current) => current.map((rider) => rider.active ? { ...rider, eta: rider.eta + 7 } : rider));
-    addEvent('TRAFFIC SPIKE · +7 min congestion applied to all active routes', 'warning');
-    showToast('Traffic spike injected. Route ETAs recalculated.');
-  }, [addEvent, showToast]);
-
-  const fastForward = useCallback(() => {
-    const nextOffset = clockOffset + 15;
-    setClockOffset(nextOffset);
-    setBatches((current) => current.map((batch) => ({ ...batch, slackSeconds: batch.slackSeconds - 15 * 60 })));
-    addEvent('FAST-FORWARD · simulation advanced 15 minutes · freshness windows recalculated', 'critical', nextOffset);
-    showToast('Simulation advanced by 15 minutes.');
-  }, [addEvent, clockOffset, showToast]);
+  }, [batches, shelters, showToast]);
 
   const toggleRider = useCallback((target: Rider) => {
     const active = !target.active;
     setRiders((current) => current.map((rider) => rider.id === target.id ? { ...rider, active, status: active ? 'Standby' : 'Offline' } : rider));
-    addEvent(`RIDER ${active ? 'RESTORED' : 'PAUSED'} · ${target.name} · ${active ? 'available for dispatch' : 'removed from live routes'}`, active ? 'success' : 'warning');
     showToast(`${target.name} ${active ? 'restored to dispatch' : 'paused from dispatch'}.`);
-  }, [addEvent, showToast]);
+  }, [showToast]);
 
   const toggleShelter = useCallback((target: Shelter) => {
     const open = !target.open;
     setShelters((current) => current.map((shelter) => shelter.id === target.id ? { ...shelter, open } : shelter));
     if (open) setBatches((current) => current.map((batch) => batch.destinationId === target.id ? { ...batch, slackSeconds: batch.slackSeconds + 8 * 60 } : batch));
-    addEvent(`SHELTER ${open ? 'REOPENED' : 'CLOSED'} · ${target.name} · receiving ${open ? 'resumed' : 'paused'}`, open ? 'success' : 'warning');
     showToast(`${target.name} receiving ${open ? 'reopened' : 'paused'}.`);
-  }, [addEvent, showToast]);
+  }, [showToast]);
 
   const metrics = useMemo(() => [
     { label: 'Active batches', value: batches.length, detail: 'Across 3 partner shelters', trend: '+2 today', trendDirection: 'up' as const, icon: Package, accent: 'blue' as const },
@@ -213,7 +155,6 @@ export default function App() {
         {view === 'control' && <div className="dashboard-content">
           <section className="metrics-grid" aria-label="Live operation metrics">{metrics.map((metric) => <MetricCard key={metric.label} {...metric} />)}</section>
           <section className="operations-grid" aria-label="Live dispatch details"><OperationalMap batches={batches} riders={riders} shelters={shelters} /><BatchTable batches={batches} riders={riders} shelters={shelters} search={search} onDeliver={confirmDelivery} /></section>
-          <ChaosConsole events={events} onGhostRider={ghostRider} onCloseShelter={closeShelter} onTrafficSpike={trafficSpike} onFastForward={fastForward} />
           <div className="page-footnote"><span><Sparkles size={14} /> Every portion matters.</span><span>SHELFLINE CONTROL PLANE <i /> DATA REFRESHES LIVE</span></div>
         </div>}
         {view === 'donor' && <div className="view-content"><DonorView batches={batches} shelters={shelters} onCreate={createBatch} /></div>}

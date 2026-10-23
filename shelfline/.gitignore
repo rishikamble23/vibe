@@ -1,18 +1,13 @@
-# Python
+# Root .gitignore - Monorepo for SHELFLINE
+# Backend and frontend have their own .gitignore files
+# This file only covers root-level artifacts
+
+# Python (root-level only)
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-venv/
-env/
-ENV/
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.mypy_cache/
-.ruff_cache/
 
 # IDE
 .idea/
@@ -38,12 +33,6 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
-
-# Frontend
-node_modules/
-dist/
-build/
-*.local
 
 # Test artifacts
 test-results/
