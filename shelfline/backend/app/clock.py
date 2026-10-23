@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from abc import ABC, abstractmethod
+from typing import Optional
 
 
 class Clock(ABC):
@@ -45,7 +46,7 @@ class RealClock(Clock):
 class SimClock(Clock):
     """Simulation clock for testing and demos."""
     
-    def __init__(self, start: datetime | None = None):
+    def __init__(self, start: Optional[datetime] = None):
         self._time = start or datetime.now(timezone.utc)
         self._speed = 1.0
     
@@ -67,3 +68,21 @@ class SimClock(Clock):
     @property
     def speed(self) -> float:
         return self._speed
+
+
+# Global clock instance
+_clock: Optional[Clock] = None
+
+
+def get_clock() -> Clock:
+    """Get the global clock instance, defaulting to RealClock."""
+    global _clock
+    if _clock is None:
+        _clock = RealClock()
+    return _clock
+
+
+def set_clock(clock: Clock) -> None:
+    """Set the global clock instance (for testing)."""
+    global _clock
+    _clock = clock
