@@ -1,0 +1,90 @@
+# SHELFLINE Configuration
+# All values in minutes unless otherwise specified
+
+# Shelf life per category (minutes)
+shelf_life:
+  cooked_meal: 75
+  medicine: 240
+  medical_kit: 480
+  water: 1440
+  dry_ration: 1440
+  default: 75
+
+# Time buffers
+serve_buffer_min: 15          # Time shelter needs to distribute
+handover_time_min: 5          # Donor->rider + rider->shelter handover
+grace_period_min: 10          # Extra time after P90 before lease expires
+redispatch_reserve_min: 15    # Time next rider needs to reach donor
+
+# Lease TTL bounds
+lease_ttl_min_min: 3          # Minimum lease TTL
+lease_ttl_max_min: 60         # Maximum lease TTL
+
+# Stall detection
+stall_ping_threshold: 3       # Non-shrinking pings before STALLED
+stall_window_min: 5           # Time window for progress check
+
+# Planner
+planner_timebox_ms: 200       # Max time for greedy pass
+planner_tick_seconds: 30      # Replan interval
+hysteresis_gain_threshold: 0.05  # Min gain to replan (5%)
+
+# Scoring weights
+scoring:
+  urgency_weight: 1.0
+  detour_weight: 0.5
+  late_probability_weight: 2.0
+  reliability_weight: 1.5
+
+# Vehicle capacities (portions)
+vehicle_capacity:
+  bike: 20
+  car: 50
+  van: 100
+
+# Safety gate
+safety_gate:
+  use_p90: true
+  min_slack_min: 0            # Slack must be >= this
+
+# Reaper
+reaper:
+  interval_seconds: 5         # How often to check expiries
+  batch_size: 50              # Max leases per loop
+
+# Notifications
+notifications:
+  nudge_delay_seconds: 60     # First nudge after lease issued
+  sms_escalation_seconds: 120 # SMS after nudge
+  call_escalation_seconds: 300 # Call after SMS
+
+# Hot standby
+hot_standby:
+  enabled: true
+  slack_threshold_min: 10     # Activate when slack below this
+
+# Rules engine
+rules:
+  config_path: "app/rules/rules.yaml"
+  cache_ttl_seconds: 60
+
+# Event log
+events:
+  batch_size: 100
+  replay_batch_size: 1000
+
+# ETA service
+eta:
+  circuity_factor: 1.35
+  noise_std_factor: 0.15
+  cache_ttl_seconds: 300
+
+# API
+api:
+  rate_limit_per_minute: 60
+  idempotency_ttl_hours: 24
+
+# WebSocket
+websocket:
+  ping_interval_seconds: 30
+  reconnect_replay_limit: 100
