@@ -1,0 +1,4 @@
+# Root .gitignore - Vibeathon monorepo
+# Ignore local tooling directories
+
+.opencode/
