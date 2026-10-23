@@ -61,12 +61,6 @@ async def root():
     }
 
 
-# Import routers here to avoid circular imports
-# from app.api import batches, leases, riders, shelters, admin, ws
-
-# app.include_router(batches.router, prefix="/batches", tags=["batches"])
-# app.include_router(leases.router, prefix="/leases", tags=["leases"])
-# app.include_router(riders.router, prefix="/riders", tags=["riders"])
-# app.include_router(shelters.router, prefix="/shelters", tags=["shelters"])
-# app.include_router(admin.router, prefix="/admin", tags=["admin"])
-# app.include_router(ws.router, prefix="/ws", tags=["websocket"])
+# Include API routes
+from app.api.routes import router as api_router
+app.include_router(api_router)
